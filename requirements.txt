@@ -1,0 +1,8 @@
+python-dotenv
+openai
+websockets
+pillow
+tavily-python
+pytesseract
+opencv-python
+numpy
