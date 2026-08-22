@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 from datetime import datetime
 import re
@@ -1538,8 +1539,9 @@ def make_reply(group_id: str, text: str) -> dict:
 
 
 def make_image_reply(group_id: str, image_path: Path) -> dict:
-    # 转成当前系统的 file URI，避免 NapCat/QQ 对本地路径缓存异常。
-    local_file_uri = image_path.resolve().as_uri()
+    # NapCat 运行在另一台机器时无法读取 Bot 主机的本地路径。
+    # OneBot 11 支持 base64://，因此直接通过 WebSocket 传输图片内容。
+    image_base64 = base64.b64encode(image_path.read_bytes()).decode("ascii")
 
     return {
         "action": "send_group_msg",
@@ -1549,7 +1551,7 @@ def make_image_reply(group_id: str, image_path: Path) -> dict:
                 {
                     "type": "image",
                     "data": {
-                        "file": local_file_uri,
+                        "file": f"base64://{image_base64}",
                     },
                 }
             ],
