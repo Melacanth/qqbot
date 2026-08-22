@@ -178,14 +178,14 @@ After=network-online.target
 Type=simple
 User=${BOT_USER}
 Group=${BOT_GROUP}
-WorkingDirectory="${ROOT_UNIT}"
+WorkingDirectory=${ROOT_UNIT}
 Environment="PYTHONUNBUFFERED=1"
 Environment="PYTHONUTF8=1"
 Environment="DATA_DIR=${DATA_UNIT}"
 Environment="LOG_DIR=${LOG_UNIT}"
 Environment="DATABASE_PATH=bot_state.db"
 Environment="IMAGE_ROOT=${IMAGE_UNIT}"
-EnvironmentFile=-"${ENV_UNIT}"
+EnvironmentFile=-${ENV_UNIT}
 ExecStart="${VENV_UNIT}/bin/python" "${ROOT_UNIT}/main.py"
 Restart=on-failure
 RestartSec=5
@@ -194,8 +194,8 @@ TimeoutStopSec=30
 UMask=0027
 NoNewPrivileges=true
 PrivateTmp=true
-StandardOutput="append:${LOG_UNIT}/qq-ai-bot.log"
-StandardError="append:${LOG_UNIT}/qq-ai-bot-error.log"
+StandardOutput=append:${LOG_UNIT}/qq-ai-bot.log
+StandardError=append:${LOG_UNIT}/qq-ai-bot-error.log
 
 [Install]
 WantedBy=multi-user.target
