@@ -127,6 +127,25 @@ log "创建数据目录..."
     "${BOT_IMAGE_DIR}" \
     "${VENV_DIR}"
 
+for log_file in \
+    "${BOT_LOG_DIR}/qq-ai-bot.log" \
+    "${BOT_LOG_DIR}/qq-ai-bot-error.log"
+do
+    if [[ -L "${log_file}" ]]; then
+        fail "日志路径不能是符号链接：${log_file}"
+    fi
+    if [[ -e "${log_file}" && ! -f "${log_file}" ]]; then
+        fail "日志路径不是普通文件：${log_file}"
+    fi
+    if [[ ! -e "${log_file}" ]]; then
+        "${SUDO[@]}" install -m 0640 -o "${BOT_USER}" -g "${BOT_GROUP}" \
+            /dev/null "${log_file}"
+    else
+        "${SUDO[@]}" chown "${BOT_USER}:${BOT_GROUP}" "${log_file}"
+        "${SUDO[@]}" chmod 0640 "${log_file}"
+    fi
+done
+
 if [[ ! -f "${ENV_FILE}" ]]; then
     log "根据 .env.example 创建 .env..."
     TEMP_ENV_FILE="$(mktemp)"
