@@ -39,8 +39,7 @@ chmod +x scripts/install.sh
 
 1. 检查 Python 版本，最低要求为 Python 3.10。
 2. 安装 `python3-venv`、`python3-dev`、`tesseract-ocr`、
-   `tesseract-ocr-chi-sim`、`fonts-noto-cjk`、`libgl1` 和
-   `libglib2.0-0`。
+   `tesseract-ocr-chi-sim`、`fonts-noto-cjk` 和 `libglib2.0-0`。
 3. 创建 `.venv/` 并安装 `requirements.txt`。
 4. 创建 `data/`、`logs/` 和 `image_library/`。
 5. 在 `.env` 不存在时从 `.env.example` 生成一份部署配置。
@@ -213,6 +212,7 @@ sudo systemd-analyze verify /etc/systemd/system/qq-ai-bot.service
 - 找不到 `chi_sim`：重新安装 `tesseract-ocr-chi-sim`。
 - 摘要图片中文显示为方框：确认已安装 `fonts-noto-cjk`，或通过
   `SUMMARY_FONT_PATH` 指定可用中文字体。
-- `libGL.so.1` 缺失：安装 `libgl1`。
+- OpenCV 导入失败：确认虚拟环境安装的是 `opencv-python-headless`，而不是
+  需要桌面图形库的 `opencv-python`。
 - 服务启动后立刻退出：先查看 `logs/qq-ai-bot-error.log` 和
   `systemctl status qq-ai-bot`。

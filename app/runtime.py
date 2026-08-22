@@ -2793,6 +2793,20 @@ async def sender_loop(
         )
 
 
+def describe_websocket_close(ws) -> str:
+    close_code = getattr(ws, "close_code", None)
+    close_reason = str(getattr(ws, "close_reason", "") or "未提供")
+    close_reason = re.sub(r"[\r\n\t]+", " ", close_reason).strip()
+    close_reason = re.sub(
+        r"(?i)(api[_-]?key|authorization|password|secret|token)"
+        r"\s*[:=]\s*\S+",
+        r"\1=<redacted>",
+        close_reason,
+    )
+    close_reason = close_reason[:200] or "未提供"
+    return f"code={close_code}, reason={close_reason}"
+
+
 async def run_bot():
     headers = (
         {"Authorization": f"Bearer {WS_TOKEN}"}
@@ -2804,6 +2818,8 @@ async def run_bot():
     reconnect_delay = 2
 
     while True:
+        connected_at = None
+
         try:
             print(f"正在连接 NapCat：{WS_LOG_TARGET}")
 
@@ -2814,7 +2830,7 @@ async def run_bot():
                 ping_timeout=20,
             ) as ws:
                 print("NapCat 已连接，机器人开始工作。")
-                reconnect_delay = 2
+                connected_at = asyncio.get_running_loop().time()
 
                 sender_task = asyncio.create_task(
                     sender_loop(ws, queue)
@@ -2852,7 +2868,18 @@ async def run_bot():
                     except asyncio.CancelledError:
                         pass
 
+                raise ConnectionError(
+                    "WebSocket 已关闭："
+                    f"{describe_websocket_close(ws)}"
+                )
+
         except Exception as exc:
+            if (
+                connected_at is not None
+                and asyncio.get_running_loop().time() - connected_at >= 60
+            ):
+                reconnect_delay = 2
+
             print(f"NapCat 连接断开：{exc}")
             print(f"{reconnect_delay} 秒后重连……")
 

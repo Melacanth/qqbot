@@ -109,7 +109,6 @@ if [[ "${SKIP_APT:-0}" != "1" ]]; then
         tesseract-ocr \
         tesseract-ocr-chi-sim \
         fonts-noto-cjk \
-        libgl1 \
         libglib2.0-0
 else
     log "SKIP_APT=1，跳过系统依赖安装。"

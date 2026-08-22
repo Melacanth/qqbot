@@ -4,5 +4,5 @@ websockets
 pillow
 tavily-python
 pytesseract
-opencv-python
+opencv-python-headless
 numpy
