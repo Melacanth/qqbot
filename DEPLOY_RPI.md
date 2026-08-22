@@ -44,6 +44,7 @@ chmod +x scripts/install.sh
 4. 创建 `data/`、`logs/` 和 `image_library/`。
 5. 在 `.env` 不存在时从 `.env.example` 生成一份部署配置。
 6. 写入 `/etc/systemd/system/qq-ai-bot.service` 并启用服务。
+7. 写入 `/etc/logrotate.d/qq-ai-bot`，限制项目日志长期占用空间。
 
 如系统依赖已经安装，可以跳过 apt：
 
@@ -171,6 +172,13 @@ systemd 自身事件可通过以下命令查看：
 ```bash
 sudo journalctl -u qq-ai-bot -n 100 --no-pager
 sudo journalctl -u qq-ai-bot -f
+```
+
+安装脚本会为两个项目日志配置轮转：每天检查一次，单个日志超过
+10 MiB 时也会轮转，保留 14 份并压缩旧日志。可只做配置检查而不执行轮转：
+
+```bash
+sudo logrotate -d /etc/logrotate.d/qq-ai-bot
 ```
 
 ## 6. 更新项目

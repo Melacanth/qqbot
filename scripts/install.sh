@@ -14,12 +14,15 @@ BOT_LOG_DIR="${BOT_LOG_DIR:-${PROJECT_ROOT}/logs}"
 BOT_IMAGE_DIR="${BOT_IMAGE_DIR:-${PROJECT_ROOT}/image_library}"
 SYSTEMD_DIR="${SYSTEMD_DIR:-/etc/systemd/system}"
 SERVICE_FILE="${SYSTEMD_DIR}/${SERVICE_NAME}"
+LOGROTATE_DIR="${LOGROTATE_DIR:-/etc/logrotate.d}"
+LOGROTATE_FILE="${LOGROTATE_DIR}/qq-ai-bot"
 ENV_FILE="${PROJECT_ROOT}/.env"
 ENV_EXAMPLE="${PROJECT_ROOT}/.env.example"
 REQUIREMENTS_FILE="${PROJECT_ROOT}/requirements.txt"
 
 TEMP_SERVICE_FILE=""
 TEMP_ENV_FILE=""
+TEMP_LOGROTATE_FILE=""
 
 
 log() {
@@ -39,6 +42,9 @@ cleanup() {
     fi
     if [[ -n "${TEMP_ENV_FILE}" && -f "${TEMP_ENV_FILE}" ]]; then
         rm -f -- "${TEMP_ENV_FILE}"
+    fi
+    if [[ -n "${TEMP_LOGROTATE_FILE}" && -f "${TEMP_LOGROTATE_FILE}" ]]; then
+        rm -f -- "${TEMP_LOGROTATE_FILE}"
     fi
 }
 trap cleanup EXIT
@@ -198,6 +204,27 @@ EOF
 log "安装 systemd 服务：${SERVICE_FILE}"
 "${SUDO[@]}" install -d -m 0755 "${SYSTEMD_DIR}"
 "${SUDO[@]}" install -m 0644 "${TEMP_SERVICE_FILE}" "${SERVICE_FILE}"
+
+TEMP_LOGROTATE_FILE="$(mktemp)"
+cat > "${TEMP_LOGROTATE_FILE}" <<EOF
+"${LOG_UNIT}/qq-ai-bot.log" "${LOG_UNIT}/qq-ai-bot-error.log" {
+    daily
+    maxsize 10M
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+    su ${BOT_USER} ${BOT_GROUP}
+    create 0640 ${BOT_USER} ${BOT_GROUP}
+}
+EOF
+
+log "安装日志轮转配置：${LOGROTATE_FILE}"
+"${SUDO[@]}" install -d -m 0755 "${LOGROTATE_DIR}"
+"${SUDO[@]}" install -m 0644 "${TEMP_LOGROTATE_FILE}" "${LOGROTATE_FILE}"
+
 "${SUDO[@]}" systemctl daemon-reload
 "${SUDO[@]}" systemctl enable "${SERVICE_NAME}"
 
@@ -213,3 +240,4 @@ printf '启动：sudo systemctl start %s\n' "${SERVICE_NAME}"
 printf '停止：sudo systemctl stop %s\n' "${SERVICE_NAME}"
 printf '状态：sudo systemctl status %s\n' "${SERVICE_NAME}"
 printf '日志：tail -f %s/qq-ai-bot.log\n' "${BOT_LOG_DIR}"
+printf '轮转：sudo logrotate -d %s\n' "${LOGROTATE_FILE}"
